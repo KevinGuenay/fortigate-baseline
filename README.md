@@ -1,8 +1,8 @@
 # FortiGate baseline
 
-Created and maintained by Kevin Guenay at \<https://guenay.at\>
+Created and maintained by Kevin Guenay at <https://guenay.at>
 
-Over the years, I have assembled my own baseline for FortiGates that I apply to basically every deployment. It contains sensible settings, some checks, best practices, and small things that not everyone knows about. I wanted it to be as generic as possible so that it can be used for every situation. The baseline grew with experience and time, and I am finally getting around to sharing it with the world.
+Over the years, I have assembled my own baseline for FortiGates that I apply to basically every deployment. It contains sensible settings, some checks, best practices, and small things that not everyone knows about. I wanted it to be as generic as possible so that it can be used for every situation.
 
 ## Points to consider
 
