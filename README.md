@@ -21,7 +21,7 @@ Over the years, I have assembled my own baseline for FortiGates that I apply to 
 
 This repository is structured as follows:
 
-* The [**baseline.md**](./baseline.md) holds multiple sections.  
+* The [**baseline.md**](./baseline.md) is the important file and holds multiple sections.
 * Each section covers one topic, includes a description and the CLI commands to configure the relevant topic.  
 * A [**fortigate\_baseline\_no\_input\_safe.conf**](./fortigate_baseline_no_input_safe.conf) file is available that includes all safe CLI commands that can be immediately applied to a device and should be non-disruptive. The “no\_input” refers to the fact that you don’t have to supply anything because, for some sections, you need to supply additional information, like interface names or services.  
   * **The only exception to the “safe” part is Private Data Encryption (PDE), because of how it [interacts with FortiManager](https://docs.fortinet.com/document/fortimanager/7.6.5/administration-guide/30332/managing-fortigates-with-private-data-encryption). This configuration includes PDE, because it is highly recommended. PDE will always be the very first item.**  
