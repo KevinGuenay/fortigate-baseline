@@ -334,7 +334,9 @@ diagnose debug enable
 
 ## Logging and information gathering
 ### Log CLI commands
-Enabling the logging of CLI commands (diagnose, get, execute, config) can be useful for audit purposes as well as during incidents.
+Enabling the logging of CLI commands (diagnose, get, execute, config) can be useful for audit purposes as well as during incidents. These logs show up under Systems Events.
+
+**Note:** If this option is enabled, credentials entered on some options of `diagnose test authserver`, including `radius`, `radius-direct`, `ldap` and `tacacs+-direct`, are visible in the generated logs as plaintext.
 
 ``` 
 config system global
