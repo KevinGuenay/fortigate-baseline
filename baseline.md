@@ -1,21 +1,21 @@
-# FortiGate baseline (2026-02-01, FortiOS 7.6.6)
+# FortiGate baseline (2026-02-06, FortiOS 7.6.6)
 
-- [FortiGate baseline (2026-02-01, FortiOS 7.6.6)](#fortigate-baseline-2026-02-01-fortios-766)
+- [FortiGate baseline (2026-02-06, FortiOS 7.6.6)](#fortigate-baseline-2026-02-06-fortios-766)
   - [Checks](#checks)
     - [Check and clear error logs](#check-and-clear-error-logs)
     - [Make sure FortiGuard services are up-to-date](#make-sure-fortiguard-services-are-up-to-date)
   - [Global settings](#global-settings)
     - [Activate Private Data Encryption](#activate-private-data-encryption)
     - [Automatically check the disk after an ungraceful shutdown](#automatically-check-the-disk-after-an-ungraceful-shutdown)
+    - [Configure a password policy](#configure-a-password-policy)
+    - [Increased administrator lockout duration](#increased-administrator-lockout-duration)
+    - [The timeout for administrator sessions must be set to a reasonable value](#the-timeout-for-administrator-sessions-must-be-set-to-a-reasonable-value)
     - [Create configuration revisions on logout](#create-configuration-revisions-on-logout)
     - [Configure reliable DNS servers](#configure-reliable-dns-servers)
     - [Configure a reliable time source](#configure-a-reliable-time-source)
     - [Configure the correct timezone](#configure-the-correct-timezone)
     - [Enable FortiGuard AMQP subscription notifications](#enable-fortiguard-amqp-subscription-notifications)
     - [Enable loading of static artifacts from a CDN for the FortiGate GUI](#enable-loading-of-static-artifacts-from-a-cdn-for-the-fortigate-gui)
-    - [Configure a password policy](#configure-a-password-policy)
-    - [Increased administrator lockout duration](#increased-administrator-lockout-duration)
-    - [The timeout for administrator sessions must be set to a reasonable value](#the-timeout-for-administrator-sessions-must-be-set-to-a-reasonable-value)
     - [Enable the Internet Services Database (ISDB) cache](#enable-the-internet-services-database-isdb-cache)
   - [High availability](#high-availability)
     - [Improve FortiGate FGCP/HA failover behaviour](#improve-fortigate-fgcpha-failover-behaviour)
@@ -29,14 +29,17 @@
     - [Log more and include more information in logs](#log-more-and-include-more-information-in-logs)
     - [Enable logging to disk and increase the maximum age](#enable-logging-to-disk-and-increase-the-maximum-age)
   - [Device and network security](#device-and-network-security)
+    - [Disable the reset button](#disable-the-reset-button)
     - [Disable and clear unused interfaces](#disable-and-clear-unused-interfaces)
     - [WAN-facing interfaces should not have management services enabled](#wan-facing-interfaces-should-not-have-management-services-enabled)
     - [Disable unsafe management services on interfaces and globally](#disable-unsafe-management-services-on-interfaces-and-globally)
     - [Use local-in policies to restrict access to management services](#use-local-in-policies-to-restrict-access-to-management-services)
-    - [Configure and use threat feeds for firewall and local-in policies](#configure-and-use-threat-feeds-for-firewall-and-local-in-policies)
-    - [Administrator users should use Multi-Factor Authentication (MFA)](#administrator-users-should-use-multi-factor-authentication-mfa)
-    - [Use Internet Service Database (ISDB) objects for firewall and local-in policies](#use-internet-service-database-isdb-objects-for-firewall-and-local-in-policies)
     - [Configure trusted hosts for all administrators](#configure-trusted-hosts-for-all-administrators)
+    - [Configure and use threat feeds for firewall and local-in policies](#configure-and-use-threat-feeds-for-firewall-and-local-in-policies)
+    - [Use Internet Service Database (ISDB) objects for firewall and local-in policies](#use-internet-service-database-isdb-objects-for-firewall-and-local-in-policies)
+    - [Use geography objects for firewall and local-in policies](#use-geography-objects-for-firewall-and-local-in-policies)
+    - [Administrator users should use Multi-Factor Authentication (MFA)](#administrator-users-should-use-multi-factor-authentication-mfa)
+    - [Create a break-glass administrator account](#create-a-break-glass-administrator-account)
     - [Create a new administrator user and delete the system default admin](#create-a-new-administrator-user-and-delete-the-system-default-admin)
     - [Disable FortiCloud SSO](#disable-forticloud-sso)
     - [Delete unused DHCP servers](#delete-unused-dhcp-servers)
@@ -62,7 +65,6 @@
     - [Web filter profiles should log more information](#web-filter-profiles-should-log-more-information)
     - [Enable and use FortiGate Cloud Sandbox](#enable-and-use-fortigate-cloud-sandbox)
 
-
 ## Checks
 ### Check and clear error logs
 Due to various reasons, mainly upgrades, errors can appear in the configuration, and they might impact production. Checking, fixing, and clearing the error logs should be done after every upgrade or configuration restore.
@@ -74,6 +76,7 @@ diagnose debug config-error-log clear
 
 ### Make sure FortiGuard services are up-to-date
 Antivirus and IPS signatures, certificate bundles, ISDB versions, etc., should be up-to-date. If not, an update should be triggered, which takes a few minutes to complete.  
+
 **Note:** Signatures will only update if the associated profiles are used.
 
 ``` 
@@ -104,6 +107,40 @@ config system global
 end
 ```
 
+### Configure a password policy
+An enabled password policy is a default starting with 7.6.5, but the default policy should be made stronger by changing at least the minimum length from 12 to 24, and password reuse should be disabled.  
+After enabling the password policy, if the current password does not fit the policy, the password needs to be changed on the next login.
+
+``` 
+config system password-policy
+    set status enable
+    set minimum-length 24
+    set min-lower-case-letter 1
+    set min-upper-case-letter 1
+    set min-non-alphanumeric 1
+    set min-number 1
+    set reuse-password disable
+end
+```
+
+### Increased administrator lockout duration
+By default, an administrator is locked out after 3 failed attempts and for 60 seconds. The duration of the lockout should be increased to make brute-force attempts less appealing and successful.
+
+``` 
+config system global
+    set admin-lockout-duration 600
+end
+```
+
+### The timeout for administrator sessions must be set to a reasonable value
+The default value for the timeout of administrators is 5 minutes. This value can be changed to something higher, but it is not recommended to go higher than 10 minutes.
+
+``` 
+config system global
+    set admintimeout 10
+end
+```
+
 ### Create configuration revisions on logout
 Configuration revisions can be automatically created upon a logout. This can help with tracking down changes.
 
@@ -115,6 +152,7 @@ end
 
 ### Configure reliable DNS servers
 By default, FortiGates use the FortiGuard DNS servers, which are unreliable. FortiGates should either use an internal DNS server or a reliable public DNS server.  
+
 **Note:** The FortiGuard DNS servers use DNS over TCP, so the protocol might need to be changed.
 
 ``` 
@@ -151,7 +189,7 @@ execute time <hh:mm:ss>
 ```
 
 ### Configure the correct timezone
-A correct timezone is important for log correlation.
+A correct timezone is important for log correlation as well as for determining the appropriate FortiGuard server to connect to.
 
 ``` 
 config system global
@@ -160,7 +198,7 @@ end
 ```
 
 ### Enable FortiGuard AMQP subscription notifications
-AMQP delivers real-time update notifications to FortiGate devices, including license alerts and database updates.
+AMQP delivers real-time update notifications to FortiGate devices, including license alerts and database updates. With these notifications critical updates and vulnerabilities can be recognized faster.
 
 ``` 
 config system fortiguard
@@ -182,40 +220,6 @@ Loading static GUI artifacts from a CDN instead of the FortiGate can improve GUI
 ``` 
 config system global
     set gui-cdn-usage enable
-end
-```
-
-### Configure a password policy
-An enabled password policy is a default starting with 7.6.5, but the default policy should be made stronger by changing at least the minimum length from 12 to 24, and password reuse should be disabled.  
-After enabling the password policy, if the current password does not fit the policy, the password needs to be changed on the next login.
-
-``` 
-config system password-policy
-    set status enable
-    set minimum-length 24
-    set min-lower-case-letter 1
-    set min-upper-case-letter 1
-    set min-non-alphanumeric 1
-    set min-number 1
-    set reuse-password disable
-end
-```
-
-### Increased administrator lockout duration
-By default, an administrator is locked out after 3 failed attempts and for 60 seconds. The duration of the lockout should be increased to make brute-force attempts less appealing and successful.
-
-``` 
-config system global
-    set admin-lockout-duration 600
-end
-```
-
-### The timeout for administrator sessions must be set to a reasonable value
-The default value for the timeout of administrators is 5 minutes. This value can be changed to something higher, but it is not recommended to go higher than 10 minutes.
-
-``` 
-config system global
-    set admintimeout 10
 end
 ```
 
@@ -263,7 +267,8 @@ end
 ```
 
 ### FortiGate FGCP/HA clusters should monitor interfaces
-Monitored interfaces are a determining factor for the primary election. By default, a single failed monitored interface causes a failover. Multiple interfaces can be selected.  
+Monitored interfaces are a determining factor for the primary election. By default, a single failed monitored interface causes a failover. Multiple interfaces can be selected, but only physical or aggregate interfaces are supported.
+
 LAG interfaces can be selected, but also the individual members of a LAG. Both options are valid, and which one to use is mainly a question of whether you value bandwidth (fail over on a single failed member) over total failovers (monitor individual members). Setting the `min-links` value for the specified LAG under `config system interface` to 1 can also create the same behaviour as selecting individual members.
 
 ``` 
@@ -410,6 +415,18 @@ end
 ```
 
 ## Device and network security
+
+### Disable the reset button
+Certain FortiGate models have a physical reset button somewhere on the device. This can be used to easily reset the device back to factory defaults. For security reasons, this functionality should be disabled.
+
+**Note:** To set the device back to default settings with a disabled reset button, you have to connect via the console and perform a firmware flash via the BIOS.
+
+```
+config system global
+    set admin-reset-button disable
+end
+```
+
 ### Disable and clear unused interfaces
 Interfaces that are not being used should be disabled, have no IP address, and have no management services enabled.
 
@@ -463,6 +480,7 @@ Two local-in policies will also be created:
 
 * It is recommended to first apply the local-in policies to either HTTPS or SSH management. If an error occurs, the other service can still be used to edit the policy. If access works, the other service can be added without worry.  
 * SNMP is considered a management service, so the SNMP polling device in the environment needs to be covered by a local-in policy if you restrict access using this method, which is recommended.
+* To see an example of a full local-in policy structure, look at the [corresponding local-in policy example](./resources/examples/local-in_example.md).
 
 ``` 
 config firewall address
@@ -479,21 +497,37 @@ config firewall local-in-policy
     edit 0
         set intf "any"  
         set srcaddr "<###PLACEHOLDER-ADDRESS-GROUP###>"  
-        set dstaddr "all"  
+        set dstaddr "all"
         set action accept
         set service "<###PLACEHOLDER_HTTPS###>" "<###PLACEHOLDER_SSH###>" "<###PLACEHOLDER-SNMP###>"  
-        set schedule "always"  
+        set schedule "always"
         set comment "ALLOW PRIVILEGED NETWORKS TO ACCESS MANAGEMENT SERVICES"  
         set virtual-patch enable
     next
     edit 0
-        set intf "any"  
-        set srcaddr "all"  
-        set dstaddr "all"  
-        set action deny
+        set intf "any"
+        set srcaddr "all"
+        set dstaddr "all"
         set service "<###PLACEHOLDER_HTTPS###>" "<###PLACEHOLDER_SSH###>" "<###PLACEHOLDER-SNMP###>"  
-        set schedule "always"  
-        set comment "DENY ACCESS TO MANAGEMENT SERVICES"  
+        set schedule "always"
+        set comment "DENY ACCESS TO MANAGEMENT SERVICES"
+        set action deny
+    next
+end
+```
+
+### Configure trusted hosts for all administrators
+Trusted hosts restrict who is allowed to log in with an administrator account. Trusted hosts are similar to local-in policies for management services, but are checked after local-in policies and are more granular, because trusted hosts are set per administrator.  
+While trusted hosts, if set on all administrators, do the same thing as local-in policies (in such a situation, an implicit local-in policy gets created), trusted hosts are prone to misconfiguration, because a single administrator without trusted hosts, and no local-in policies can open up the management services to all sources.  
+**Up to a maximum of 10 trusted host entries can be added per protocol (IPv4 and IPv6) per administrator.**
+
+**Trusted hosts should always be used as a supplement to local-in policies and never standalone. Local-in policies are number 1 and a must.**
+
+``` 
+config system admin
+    edit "<###PLACEHOLDER_ADMIN-NAME###>"  
+        set trusthost1 <###PLACEHOLDER_ADDRESS###>  
+        set trusthost2 <###PLACEHOLDER_ADDRESS###>  
     next
 end
 ```
@@ -503,12 +537,28 @@ end
 ### Configure and use threat feeds for firewall and local-in policies
 Threat feeds are regularly downloaded lists that include information like IPs, which can be used in firewall and local-in policies to block communication from and to malicious IPs.
 
-For this baseline, a few public threat feeds are given along with a more full-featured configuration.
+For this baseline, a few public threat feeds, as well as resources, are given along with a more full-featured configuration.
+
+**Resources and feeds:**
+
+* https://github.com/wallacebrf/dns/tree/main
+* https://github.com/borestad/blocklist-abuseipdb
+* https://github.com/bitwire-it/ipblocklist
+* https://opendbl.net/lists/ipsum.list
+* https://github.com/platformbuilds/SpamhausIPLists
+* https://www.dan.me.uk/torlist/
+* https://lists.blocklist.de/lists/
+* https://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt
+* https://rules.emergingthreats.net/blockrules/compromised-ips.txt
+* https://api.greynoise.io/v3/tags/ed943e41-bce1-4aae-9173-4ae36f841700/ips?format=txt&token=YNsG9pxSQRK1MFYqMVPfVw
 
 **Important points:**
 
 * The policies using these threat feeds should be placed as high up in the policy lists as is reasonable, to block as soon as possible.  
 * The local-in policy denies all attempts from the entries in the threat feeds to contact the FortiGate itself, which includes protocols like IKE/IPsec, not just management services.
+* Some threat feeds may include RFC1918 addresses. Using these addresses in your local-in policy will lock you out of managing your FortiGate via the selected services if you are using RFC1918 addresses to gain access.
+* The Greynoise threat feed includes a "?" character in the URL, so this URL needs to be entered manually in the GUI or using batch mode.
+* To see an example of a full local-in policy structure, look at the [corresponding local-in policy example](./resources/examples/local-in_example.md).
 
 ``` 
 config system external-resource
@@ -535,6 +585,7 @@ config firewall policy
         set schedule "always"  
         set service "ALL"  
         set logtraffic all
+        set action deny
     next
     edit 0
         set name "BLOCK THREAT FEEDS TO ANY"  
@@ -545,6 +596,7 @@ config firewall policy
         set schedule "always"  
         set service "ALL"  
         set logtraffic all
+        set action deny
     next
 end
 config firewall local-in-policy
@@ -554,27 +606,11 @@ config firewall local-in-policy
         set srcaddr "<###PLACEHOLDER_TF-EMERGINGTHREAT-BLOCK-IPs###>" "<###PLACEHOLDER_TF-EMERGINGTHREAT-COMPROMISED-IPs###>" "<###PLACEHOLDER_TF-GREYNOISE###>"  
         set dstaddr "all"  
         set schedule "always"  
-        set service "ALL"  
+        set service "ALL"
+        set action deny
     next
 end
 ```
-
-### Administrator users should use Multi-Factor Authentication (MFA)
-
-MFA should be used for every administrator user. There are various methods to achieve this:
-
-* FortiToken: Every FortiGate comes with 2 free mobile FortiTokens that can be used
-* SAML SSO: SAML is an easy way to enable MFA for all types of authentication on a FortiGate, and you probably already have an MFA service
-  * [Microsoft Entra ID](https://community.fortinet.com/t5/FortiGate/Technical-Tip-Configuring-SAML-SSO-login-for-FortiGate/ta-p/194656)  
-  * [Cisco Duo](https://duo.com/docs/sso-fortigate-admin)  
-  * [Okta](https://community.fortinet.com/t5/FortiGate/Technical-Tip-Configuring-SAML-SSO-login-for-FortiGate/ta-p/196181)  
-  * Etc.  
-* RADIUS-backed: Your RADIUS server may have the possibility to provide MFA using additional configuration
-* SMS: While not recommended, due to being relatively insecure, it is a viable method
-* Email: While not recommended, due to being relatively insecure, it is a viable method
-* [Free FortiToken/FortiIdentity Cloud trial](https://docs.fortinet.com/document/fortigate/7.4.0/administration-guide/66318/enable-the-fortitoken-cloud-free-trial-directly-from-the-fortigate-new): You can use a 1-month free trial of FortiToken/FortiIdentity Cloud.
-
-**Note:** It might be a good idea to create a break-glass administrator account with an extremely long and complex password (64+ characters), very limited trusted hosts (or only being able to log in using the console) and without MFA.
 
 ### Use Internet Service Database (ISDB) objects for firewall and local-in policies
 The ISDB holds dynamically updated objects for various services, like FortiGuard, Amazon AWS, Microsoft Azure, etc., but it also includes malicious and potentially unwanted objects, like VPN, command and control, and malicious servers.
@@ -585,6 +621,7 @@ These ISDB objects can be grouped and used to block communication from and to th
 
 * The policies using these threat feeds should be placed as high up in the policy lists as is reasonable, to block as soon as possible.  
 * The local-in policy denies all attempts from the entries in the threat feeds to contact the FortiGate itself, which includes protocols like IKE/IPsec, not just management services.
+* To see an example of a full local-in policy structure, look at the [corresponding local-in policy example](./resources/examples/local-in_example.md).
 
 For this baseline, a few ISDB objects are given along with a more full-featured configuration.
 
@@ -607,8 +644,9 @@ config firewall policy
         set srcaddr "all"  
         set internet-service enable
         set internet-service-group "<###PLACEHOLDER_BAD-ISDB-DESTINATION###>"  
-        set schedule "always"  
+        set schedule "always"
         set logtraffic all
+        set action deny
     next
     edit 0
         set name "BLOCK BAD ISDB TO ANY"  
@@ -620,6 +658,7 @@ config firewall policy
         set schedule "always"  
         set service "ALL"  
         set logtraffic all
+        set action deny
     next
 end
 config firewall local-in-policy
@@ -630,26 +669,101 @@ config firewall local-in-policy
         set internet-service-src-group "<###PLACEHOLDER_BAD-ISDB-SOURCE###>"  
         set dstaddr "all"  
         set schedule "always"  
-        set service "ALL"  
+        set service "ALL"
+        set action deny
     next
 end
 ```
 
-### Configure trusted hosts for all administrators
-Trusted hosts restrict who is allowed to log in with an administrator account. Trusted hosts are similar to local-in policies for management services, but are checked after local-in policies and are more granular, because trusted hosts are set per administrator.  
-While trusted hosts, if set on all administrators, do the same thing as local-in policies (in such a situation, an implicit local-in policy gets created), trusted hosts are prone to misconfiguration, because a single administrator without trusted hosts, and no local-in policies can open up the management services to all sources.  
-**Up to a maximum of 10 trusted host entries can be added per administrator.**
+### Use geography objects for firewall and local-in policies
+Geography objects represent a country or region according to Fortinet's geography IP database. These objects can be used in firewall and local-in policies to allow or deny traffic from/to entire countries or regions with which you don't want to communicate at all.
 
-**Trusted hosts should always be used as a supplement to local-in policies and never standalone. Local-in policies are number 1 and a must.**
+[Geography objects can be matched by their registered or physical location using the `geoip-match` setting.](https://docs.fortinet.com/document/fortigate/7.6.5/administration-guide/726241/matching-geoip-by-registered-and-physical-location)
+[Anycast addresses can be recognized in geography objects using the `geoip-anycast`setting.](https://docs.fortinet.com/document/fortigate/7.6.5/administration-guide/661999/recognize-anycast-addresses-in-geo-ip-blocking)
+
+Geography objects can be grouped, both with their own type as well as regular address objects.
+
+**Important points:**
+
+* The policies using these geography objects should be placed as high up in the policy lists as is reasonable, to block as soon as possible. 
+* The local-in policy denies all attempts from the entries assigned to the geography object to contact the FortiGate itself, which includes protocols like IKE/IPsec, not just management services.
+* The geography object in [**fortigate\_baseline\_no\_input\_safe\_create.conf**](./fortigate_baseline_no_input_safe_create.conf) uses Antarctica as the country/region. I'm very sorry to all the scientists there who hopefully have a console cable handy if they don't edit the object before using it.
+
+```
+config firewall address
+    edit "<###PLACEHOLDER_GEO-NAME###>"
+        set type geography
+        set country "<###PLACEHOLDER-GEO-CODE###>"
+    next
+end
+config firewall policy
+    edit 0
+        set name "BLOCK TRAFFIC TO UNWANTED GEO"  
+        set srcintf "any"  
+        set dstintf "<###PLACEHOLDER_WAN-INTF###>"  
+        set srcaddr "all"  
+        set dstaddr "<###PLACEHOLDER_GEO-NAME###>"  
+        set schedule "always"  
+        set service "ALL"  
+        set logtraffic all
+        set action deny
+    next
+    edit 0
+        set name "BLOCK UNWANTED GEO TO ANY"  
+        set srcintf "<###PLACEHOLDER_WAN-INTF###>"  
+        set dstintf "any"  
+        set srcaddr "<###PLACEHOLDER_GEO-NAME###>"  
+        set dstaddr "all"  
+        set schedule "always"  
+        set service "ALL"  
+        set logtraffic all
+        set action deny
+    next
+end
+config firewall local-in-policy
+    edit 0
+        set comments "BLOCK UNWANTED GEO TO FORTIGATE"  
+        set intf "any"  
+        set srcaddr "<###PLACEHOLDER_GEO-NAME###>"  
+        set dstaddr "all"  
+        set schedule "always"  
+        set service "ALL"
+        set action deny
+    next
+end
+```
+
+Another way to use geography objects is to use them to designate that these are the only countries you want to communicate with.
+
+### Administrator users should use Multi-Factor Authentication (MFA)
+MFA should be used for every administrator user. There are various methods to achieve this:
+
+* FortiToken: Every FortiGate comes with 2 free mobile FortiTokens that can be used
+* SAML SSO: SAML is an easy way to enable MFA for all types of authentication on a FortiGate, and you probably already have an MFA service
+  * [Microsoft Entra ID](https://community.fortinet.com/t5/FortiGate/Technical-Tip-Configuring-SAML-SSO-login-for-FortiGate/ta-p/194656)  
+  * [Cisco Duo](https://duo.com/docs/sso-fortigate-admin)  
+  * [Okta](https://community.fortinet.com/t5/FortiGate/Technical-Tip-Configuring-SAML-SSO-login-for-FortiGate/ta-p/196181)  
+  * Etc.  
+* RADIUS-backed: Your RADIUS server may have the possibility to provide MFA using additional configuration
+* SMS: While not recommended, due to being relatively insecure, it is a viable method
+* Email: While not recommended, due to being relatively insecure, it is a viable method
+* [Free FortiToken/FortiIdentity Cloud trial](https://docs.fortinet.com/document/fortigate/7.4.0/administration-guide/66318/enable-the-fortitoken-cloud-free-trial-directly-from-the-fortigate-new): You can use a 1-month free trial of FortiToken/FortiIdentity Cloud.
+
+### Create a break-glass administrator account
+Since every administrator should have MFA, a break-glass administrator account is a good idea. This administrator should have an extremely long and complex password (64+ characters), very limited trusted hosts (or only being able to log in using the console) and no MFA.
+
+To create an administrator who can only log in using the console, use a trusted host value of `0.0.0.0/32`.
 
 ``` 
 config system admin
-    edit "<###PLACEHOLDER_ADMIN-NAME###>"  
-        set trusthost1 <###PLACEHOLDER_ADDRESS###>  
-        set trusthost2 <###PLACEHOLDER_ADDRESS###>  
+    edit "<###PLACEHOLDER_ADMIN-NAME###>"
+        set vdom "root"
+        set trusthost1 0.0.0.0/32
+        set accprofile "super_admin"
+        set password <###PLACEHOLDER_PASSWORD###>  
     next
 end
-```
+``` 
 
 ### Create a new administrator user and delete the system default admin
 The admin user is available on all FortiGate devices, so it is an easy target for brute force attempts. A new administrator user should be created, and once proper production use is confirmed, the default “admin” user should be deleted.
@@ -694,6 +808,7 @@ end
 ### Stronger encryption for FortiGate and stronger Diffie-Hellman
 Enabling strong encryption is recommended and a default setting.  
 Using a higher value for DH leads to stronger encryption.  
+
 **Note:** This is about HTTPS and SSH traffic towards the FortiGate. It has no impact on IKE/IPsec.
 
 ``` 
@@ -726,6 +841,7 @@ end
 ## Networking
 ### Configure SD-WAN
 Employing SD-WAN has no drawbacks and makes future additions of WAN links easy. Additional SD-WAN features like SD-WAN rules and SLAs do not have to be used for the feature to be used.  
+
 **Note:** Interfaces need to have certain references removed, like being in firewall policies, before they can be set as SD-WAN members.
 
 ``` 
@@ -917,7 +1033,7 @@ end
 ```
 
 ### Antivirus should use the extreme database if available
-Select FortiGate models can use the extreme Antivirus database.  
+Select FortiGate models can use the extreme antivirus database. The extreme database includes the contents of the extended database, as well as "zoo viruses". These types of viruses are considered dormant and haven't been seen in a long time.
 
 **Note:** This can have a negative performance impact.
 
