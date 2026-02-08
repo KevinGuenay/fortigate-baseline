@@ -1,5 +1,7 @@
 # FortiGate baseline
 
+[**The baseline**](./baseline.md)
+
 Created and maintained by Kevin Guenay at <https://guenay.at>
 
 Over the years, I have assembled my own baseline for FortiGates that I apply to basically every deployment. It contains sensible settings, some checks, best practices, and small things that not everyone knows about. I wanted it to be as generic as possible so that it can be used for every situation.
