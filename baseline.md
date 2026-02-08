@@ -1,9 +1,10 @@
-# FortiGate baseline (2026-02-06, FortiOS 7.6.6)
+# FortiGate baseline (2026-02-08, FortiOS 7.6.6)
 
-- [FortiGate baseline (2026-02-06, FortiOS 7.6.6)](#fortigate-baseline-2026-02-06-fortios-766)
+- [FortiGate baseline (2026-02-08, FortiOS 7.6.6)](#fortigate-baseline-2026-02-08-fortios-766)
   - [Checks](#checks)
     - [Check and clear error logs](#check-and-clear-error-logs)
     - [Make sure FortiGuard services are up-to-date](#make-sure-fortiguard-services-are-up-to-date)
+    - [Periodically check and compare FortiGate filesystem hash values](#periodically-check-and-compare-fortigate-filesystem-hash-values)
   - [Global settings](#global-settings)
     - [Activate Private Data Encryption](#activate-private-data-encryption)
     - [Automatically check the disk after an ungraceful shutdown](#automatically-check-the-disk-after-an-ungraceful-shutdown)
@@ -83,6 +84,12 @@ Antivirus and IPS signatures, certificate bundles, ISDB versions, etc., should b
 execute update-now
 diagnose autoupdate versions
 ```
+
+### Periodically check and compare FortiGate filesystem hash values
+
+Comparing a known-good list of hash values of the FortiGate filesystem with a new list can highlight Indicators of Compromise (IoC). A hash list can be created using the `diagnose sys filesystem hash` command. This list needs to be saved and can later be compared with a new list of hashes after certain events (suspected security breaches, periodically, etc.).
+
+To facilitate an easier way to do this process, one can use the [FortiGate filesystem hash checker](https://github.com/KevinGuenay/fortigate-fs-hash-checker), which automates the comparison process.
 
 ## Global settings
 ### Activate Private Data Encryption
