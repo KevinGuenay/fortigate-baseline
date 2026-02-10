@@ -550,6 +550,7 @@ For this baseline, a few public threat feeds, as well as resources, are given al
 
 * https://github.com/wallacebrf/dns/tree/main
 * https://github.com/borestad/blocklist-abuseipdb
+* https://github.com/nwiecz/C2IntelFeedsFGT
 * https://github.com/bitwire-it/ipblocklist
 * https://opendbl.net/lists/ipsum.list
 * https://github.com/platformbuilds/SpamhausIPLists
