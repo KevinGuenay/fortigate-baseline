@@ -248,6 +248,7 @@ By default, FortiGate HA clusters:
 * Do not perform a failover if conserve mode (default 88% of RAM usage) is triggered.  
 * Do not perform a failover if an SSD failure happens
 * Ignore the uptime as a point for the primary election if the difference between the members is less than 300 seconds
+
 FortiGate HA clusters should:
 
 * Synchronize TCP, SCTP, UDP, ICMP, expectation and SIP ALG sessions
@@ -553,7 +554,6 @@ For this baseline, a few public threat feeds, as well as resources, are given al
 * https://github.com/nwiecz/C2IntelFeedsFGT
 * https://github.com/bitwire-it/ipblocklist
 * https://opendbl.net/lists/ipsum.list
-* https://github.com/platformbuilds/SpamhausIPLists
 * https://www.dan.me.uk/torlist/
 * https://lists.blocklist.de/lists/
 * https://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt
