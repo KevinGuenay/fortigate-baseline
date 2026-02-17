@@ -15,7 +15,7 @@ Over the years, I have assembled my own baseline for FortiGates that I apply to 
   * No VDOMs are used. This doesn’t mean that the baseline can’t be used for VDOM deployments, but lots of things need to be handled differently if VDOMs are used.  
   * An active internet connection is available. This isn’t necessary, but some things will not work without one.  
 * Only IPv4 will be handled. No IPv6 settings are provided.  
-* This is a CLI-first baseline. For some settings, both a GUI and a CLI way to configure exist. Due to the changing nature of the FortiGate GU, I will only provide the GUI way if necessary.  
+* This is a CLI-first baseline. For some settings, both a GUI and a CLI way to configure exist. Due to the changing nature of the FortiGate GUI, I will only provide the GUI way if necessary.  
 * I am not infallible. If you believe the baseline can be improved, create an issue or a pull request, and I’ll look at it.  
   * The baseline should stay as generic as possible and shouldn’t interfere with existing configurations (performance impacts are highlighted, and decisions are up to the end user), so requests to change the baseline will have to keep this in mind. To give an example of what I wouldn’t accept: Deleting the SIP session helper and disabling the SIP ALG. While such a configuration is often required, it can create problems.
 
