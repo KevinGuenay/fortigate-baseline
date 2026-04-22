@@ -1,4 +1,4 @@
-# FortiGate baseline
+# The FortiGate best practices baseline
 
 [**The baseline**](./baseline.md)
 
