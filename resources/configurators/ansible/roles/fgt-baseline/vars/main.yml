@@ -1,0 +1,159 @@
+---
+## !!! BE SURE TO SET YOUR OWN VALUES !!!
+
+## Boolean settings to set
+
+### Should Private Data Encryption be enabled? true is recommended
+private_data_encryption: true
+
+### Is this an HA system?
+ha_enabled: true
+### HA group ID is 0 by default
+ha_group_id: 1
+### Should a remote link failover be configured?
+ha_remote_link_failover: true
+
+### Should an SD-WAN zone with members be created?
+### !!! SET sdwan_zone_name and sdwan_members BELOW !!!
+configure_sdwan: true
+
+### Should local-in management access be secured? true is recommended
+### !!! SET allowed_local_in_management_sources BELOW !!!
+configure_local_in_management_security: true
+
+### Should threat feeds and associated policies be created? true is recommended
+### !!! REORDER POLICIES AFTER CREATION !!!
+configure_threatfeed_security: true
+
+### Should ISDB groups and associated policies be created? true is recommended
+### !!! REORDER POLICIES AFTER CREATION !!!
+configure_isdb_security: true
+
+### Should the created local-in policies be enabled? true is recommended
+local_in_policies_enabled: true
+
+### Should the created firewall policies be enabled? true is recommended
+firewall_policies_enabled: true
+
+### Should the RFC1918 space be routed into a blackhole? Address objects and the group will get created regardless of the value
+rfc1918_blackhole: true
+
+### Should baseline security profiles be created?
+create_baseline_security_profiles: true
+
+## Global values to set
+vdom: "root"
+https_admin_port: 443
+ssh_admin_port: 22
+### !!! ADMINS HAVE TO CHANGE PASSWORDS AFTER SETTING THE PASSWORD POLICY AND CURRENT PASSWORDS DO NOT COMPLY WITH THE PASSWORD POLICY !!!
+password_policy:
+    minimum_length: 24
+    min_lower_case_letter: 1
+    min_upper_case_letter: 1
+    min_non_alphanumeric: 1
+    min_number: 1
+admin_lockout_duration: 600
+admintimeout: 10
+dns_settings:
+    primary: "9.9.9.9"
+    secondary: "208.67.220.220"
+    protocol: "cleartext"
+ntp_servers:
+    - { "id": "1000", "server": "0.pool.ntp.org" }
+    - { "id": "1001", "server": "1.pool.ntp.org" }
+timezone: "Etc/UCT"
+
+## HA values to set
+memory_failover_flip_timeout: 60
+memory_failover_threshold: 86
+ha_uptime_diff_margin: 60
+### HA Monitored interfaces are supplied as a space-separated string
+ha_monitor_interfaces: "port3 port4"
+pingserver_flip_timeout: 60
+### If SD-WAN is configured and an SLA is attached to an interface, that interface can be used as a pingserver interface
+### Multiple interfaces can be specified as a space-separated string
+ha_remote_link_failover_sdwan_interface: ""
+ha_remote_link_failover_target:
+    - { "name": "BASE-TARGET", "srcintf": "port1", "server": "198.51.100.1", "protocol": "ping", "ha_priority": 1, "update_cascade_interface": "disable", "update_static_route": "disable", "update_policy_route": "disable" }
+    - { "name": "BASE-TARGET2", "srcintf": "port2", "server": "192.0.2.2", "protocol": "ping", "ha_priority": 1, "update_cascade_interface": "disable", "update_static_route": "disable", "update_policy_route": "disable" }
+
+## Logging values to set
+monitor_bandwidth_interfaces:
+    - "port1"
+    - "port2"
+device_detection_interfaces:
+    - "port1"
+    - "port2"
+
+## Device and network security settings to set
+allowed_local_in_management_sources:
+    - { "name": "BASE-NETWORK", "subnet": "198.51.100.0/24" }
+    - { "name": "BASE-HOST", "subnet": "192.0.2.1/32" }
+fortigate_admins:
+    - { "name": "admin", "trusthost1": "198.51.100.0/24", "trusthost2": "0.0.0.0/32", "trusthost3": "0.0.0.0/32", "trusthost4": "0.0.0.0/32",
+        "trusthost5": "0.0.0.0/32", "trusthost6": "0.0.0.0/32", "trusthost7": "0.0.0.0/32", "trusthost8": "0.0.0.0/32", "trusthost9": "0.0.0.0/32", "trusthost10": "0.0.0.0/32" }
+
+## Network settings to set
+sdwan_zone_name: "SDWAN-OUTSIDE"
+sdwan_members:
+    - wan1
+    - wan2
+
+## Security profiles settings to set
+### Quarantine destination can be NULL, fortianalyzer or disk
+av_quarantine_destination: "NULL"
+
+threatfeeds:
+    - { "url": "https://raw.githubusercontent.com/borestad/blocklist-abuseipdb/refs/heads/main/abuseipdb-s100-1d.ipv4", "name": "ABUSEIPDB" }
+    - { "url": "https://raw.githubusercontent.com/nwiecz/C2IntelFeedsFGT/refs/heads/main/feeds/IPC2s.csv", "name": "IPC2" }
+    - { "url": "https://opendbl.net/lists/ipsum.list", "name": "IPSUM" }
+    - { "url": "https://www.dan.me.uk/torlist/", "name": "DAN-TOR" }
+    - { "url": "https://rules.emergingthreats.net/fwrules/emerging-Block-IPs.txt", "name": "EMERGING-BLOCK-IPs" }
+    - { "url": "https://rules.emergingthreats.net/blockrules/compromised-ips.txt", "name": "COMROMISED-IPs" }
+    - { "url": "https://api.greynoise.io/v3/tags/ed943e41-bce1-4aae-9173-4ae36f841700/ips?format=txt&token=YNsG9pxSQRK1MFYqMVPfVw", "name": "GREYNOISE" }
+bad_isdb_sources:
+    - "Botnet-C&C.Server"
+    - "Hosting-Bulletproof.Hosting"
+    - "Malicious-Malicious.Server"
+    - "Phishing-Phishing.Server"
+    - "Proxy-Proxy.Server"
+    - "Spam-Spamming.Server"
+    - "Tor-Exit.Node"
+    - "Tor-Relay.Node"
+    - "VPN-Anonymous.VPN" #The VPN entry can have different names depending on the installed ISDB version. Both names are present and errors are ignored in the task where the entries are used.
+    - "VPN-Anonymizing.VPN.Server"
+bad_isdb_destinations:
+    - "Blockchain-Crypto.Mining.Pool"
+    - "Botnet-C&C.Server"
+    - "Hosting-Bulletproof.Hosting"
+    - "Malicious-Malicious.Server"
+    - "Phishing-Phishing.Server"
+    - "Proxy-Proxy.Server"
+    - "Spam-Spamming.Server"
+    - "Tor-Exit.Node" #Tor exit nodes can also be a destination in newer ISDB versions, so they are also included in the destination list and errors are ignored in the task where it is used.
+    - "Tor-Relay.Node"
+    - "VPN-Anonymous.VPN" #The VPN entry can have different names depending on the installed ISDB version. Both names are present and errors are ignored in the task where the entries are used.
+    - "VPN-Anonymizing.VPN.Server"
+
+### Do not set this variable
+pingserver_monitor_interface: ""
+
+## Not implemented settings
+not_implemented_settings:
+    - "Disable the reset button"
+    - "Disable and clear unused interfaces"
+    - "WAN-facing interfaces should not have management services enabled"
+    - "Disable unsafe management services on interfaces"
+    - "Created firewall policies use any for srcintf and dstintf, which may or may not be desirable"
+    - "!!!Reorder created firewall and local-in policies!!!"
+    - "Use geography objects for firewall and local-in policies"
+    - "Administrator users should use Multi-Factor Authentication (MFA)"
+    - "Create a break-glass administrator account"
+    - "Create a new administrator user and delete the system default admin"
+    - "Delete unused DHCP servers"
+    - "Put interfaces in zones"
+    - "Set FortiGuard settings in DNS and web filter profile"
+    - "Enable and use FortiGate Cloud Sandbox"
+    - "https://github.com/KevinGuenay/fortigate-baseline/blob/main/baseline.md"
+
+comment_string: "FORTIGATE BASELINE FROM https://guenay.at"

@@ -1,0 +1,100 @@
+---
+- name: "Activate Private Data Encryption"
+  when: private_data_encryption
+  fortios_system_global:
+    vdom: "{{ vdom }}"
+    system_global:
+      private_data_encryption: "enable"
+
+- name: "Automatically check the disk after an ungraceful shutdown"
+  fortios_system_global:
+    vdom: "{{ vdom }}"
+    system_global:
+      autorun_log_fsck: "enable"
+
+- name: "Configure a password policy"
+  fortios_system_password_policy:
+    vdom: "{{ vdom }}"
+    system_password_policy:
+      apply_to: "admin-password"
+      minimum_length: "{{ password_policy.minimum_length }}"
+      min_upper_case_letter: "{{ password_policy.min_upper_case_letter }}"
+      min_lower_case_letter: "{{ password_policy.min_lower_case_letter }}"
+      min_non_alphanumeric: "{{ password_policy.min_non_alphanumeric }}"
+      min_number: "{{ password_policy.min_number }}"
+      reuse_password: "disable"
+      status: "enable"
+
+- name: "Increased administrator lockout duration"
+  fortios_system_global:
+    vdom: "{{ vdom }}"
+    system_global:
+      admin_lockout_duration: "{{ admin_lockout_duration }}"
+
+- name: "The timeout for administrator sessions must be set to a reasonable value"
+  fortios_system_global:
+    vdom: "{{ vdom }}"
+    system_global:
+      admintimeout: "{{ admintimeout }}"
+
+- name: "Create configuration revisions on logout"
+  fortios_system_global:
+    vdom: "{{ vdom }}"
+    system_global:
+      revision_backup_on_logout: "enable"
+
+- name: "Configure only primary reliable DNS servers"
+  when: dns_settings.secondary == ""
+  fortios_system_dns:
+    vdom: "{{ vdom }}"
+    system_dns:
+      primary: "{{ dns_settings.primary }}"
+      protocol: "{{ dns_settings.protocol }}"
+
+- name: "Configure reliable DNS servers"
+  when: dns_settings.secondary != ""
+  fortios_system_dns:
+    vdom: "{{ vdom }}"
+    system_dns:
+      primary: "{{ dns_settings.primary }}"
+      secondary: "{{ dns_settings.secondary }}"
+      protocol: "{{ dns_settings.protocol }}"
+
+- name: "Configure a reliable time source"
+  fortios_system_ntp:
+    vdom: "{{ vdom }}"
+    member_state: "present"
+    member_path: ntpserver:id
+    system_ntp:
+      type: custom
+      ntpsync: "enable"
+      ntpserver:
+      -
+        id: "{{ item.id }}"
+        server: "{{ item.server }}"
+  loop: "{{ ntp_servers }}"
+
+- name: "Configure the correct timezone"
+  fortios_system_global:
+    vdom: "{{ vdom }}"
+    system_global:
+      timezone: "{{ timezone}}"
+
+- name: "Enable FortiGuard AMQP subscription notifications and disable persistent connections"
+  fortios_system_fortiguard:
+    vdom: "{{ vdom }}"
+    system_fortiguard:
+      subscribe_update_notification: "enable"
+      persistent_connection: "disable"
+
+- name: "Enable loading of static artifacts from a CDN for the FortiGate GUI"
+  fortios_system_global:
+    vdom: "{{ vdom }}"
+    system_global:
+      gui_cdn_usage: "enable"
+
+- name: "Enable the Internet Services Database (ISDB) cache"
+  fortios_system_settings:
+    vdom: "{{ vdom }}"
+    system_settings:
+      internet_service_database_cache : "enable"

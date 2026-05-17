@@ -1,6 +1,6 @@
-# FortiGate baseline (2026-02-08, FortiOS 7.6.6)
+# FortiGate baseline (2026-05-17, FortiOS 7.6.6)
 
-- [FortiGate baseline (2026-02-08, FortiOS 7.6.6)](#fortigate-baseline-2026-02-08-fortios-766)
+- [FortiGate baseline (2026-05-17, FortiOS 7.6.6)](#fortigate-baseline-2026-05-17-fortios-766)
   - [Checks](#checks)
     - [Check and clear error logs](#check-and-clear-error-logs)
     - [Make sure FortiGuard services are up-to-date](#make-sure-fortiguard-services-are-up-to-date)
@@ -19,6 +19,7 @@
     - [Enable loading of static artifacts from a CDN for the FortiGate GUI](#enable-loading-of-static-artifacts-from-a-cdn-for-the-fortigate-gui)
     - [Enable the Internet Services Database (ISDB) cache](#enable-the-internet-services-database-isdb-cache)
   - [High availability](#high-availability)
+    - [FortiGate FGCP/HA clusters should use a non-default group ID](#fortigate-fgcpha-clusters-should-use-a-non-default-group-id)
     - [Improve FortiGate FGCP/HA failover behaviour](#improve-fortigate-fgcpha-failover-behaviour)
     - [FortiGate FGCP/HA clusters should monitor interfaces](#fortigate-fgcpha-clusters-should-monitor-interfaces)
     - [Remote link failover for FortiGate FGCP/HA](#remote-link-failover-for-fortigate-fgcpha)
@@ -55,6 +56,7 @@
     - [SSL/SSH profiles should block unsupported SSL/SSH communication](#sslssh-profiles-should-block-unsupported-sslssh-communication)
     - [Deep inspection SSL/SSH profiles should have a minimum SSL/TLS version of 1.2](#deep-inspection-sslssh-profiles-should-have-a-minimum-ssltls-version-of-12)
     - [Antivirus profiles should use the Outbreak Prevention database and quarantine files](#antivirus-profiles-should-use-the-outbreak-prevention-database-and-quarantine-files)
+    - [Antivirus profiles should treat Windows executables in email attachments as viruses](#antivirus-profiles-should-treat-windows-executables-in-email-attachments-as-viruses)
     - [Antivirus should use the extreme database if available](#antivirus-should-use-the-extreme-database-if-available)
     - [Antivirus should use machine learning to better detect malware](#antivirus-should-use-machine-learning-to-better-detect-malware)
     - [Intrusion Prevention System profiles should block more signatures,  malicious traffic, and log packets](#intrusion-prevention-system-profiles-should-block-more-signatures--malicious-traffic-and-log-packets)
@@ -241,6 +243,17 @@ end
 ```
 
 ## High availability
+
+### FortiGate FGCP/HA clusters should use a non-default group ID
+
+FortiGate HA clusters use a default group ID of 0 and [since the group ID is used in determining the virtual MAC address of interfaces](https://community.fortinet.com/fortigate-3/technical-tip-ha-cluster-virtual-mac-addresses-96311), this creates problems if two FortiGate HA clusters are in the same broadcast domain. Using a non-default group ID is recommended to not run into problems when a new FortiGate HA cluster is initially created.
+
+**Attention:** Changing the group ID from the default of 0 changes the virtual MAC addresses of interfaces, which creates a short outage due to the propagation of the new MAC addresses. The length of the outage depends on how network devices respond to the FortiGate HA cluster's Gratuitous ARP (GARP). From experience, this outage is anywhere from 10 to 60 seconds. Consult the documentation for the devices in your network.
+
+config system ha
+    set group-id "<###PLACEHOLDER_HA-GROUP-ID###>"
+end
+
 ### Improve FortiGate FGCP/HA failover behaviour
 By default, FortiGate HA clusters:
 
@@ -390,14 +403,13 @@ end
 * Resolve IPs and ports if possible
 * Log API actions
 * Add zone names to logs
+* Make sure local memory logging is enabled
 * Make sure local traffic is logged
 
 ``` 
 config log setting
     set fwpolicy-implicit-log enable
-    set local-in-allow enable
-    set local-in-deny-unicast enable
-    set local-in-deny-broadcast enable
+    set local-in-policy-log enable
     set local-out enable
     set extended-log enable
     set extended-utm-log enable
@@ -406,6 +418,9 @@ config log setting
     set rest-api-set enable
     set rest-api-get enable
     set zone-name enable
+end
+config log memory setting
+    set status enable
 end
 config log memory filter
     set local-traffic enable
@@ -486,6 +501,7 @@ Two local-in policies will also be created:
 
 **Important points:**
 
+* Starting with 7.6.1, FortiGates already come with a default local-in policy that blocks the Malicious-Malicious.Server, Tor-Exit.Node, and Tor-Relay.Node ISDB objects from all interfaces on all services.
 * It is recommended to first apply the local-in policies to either HTTPS or SSH management. If an error occurs, the other service can still be used to edit the policy. If access works, the other service can be added without worry.  
 * SNMP is considered a management service, so the SNMP polling device in the environment needs to be covered by a local-in policy if you restrict access using this method, which is recommended.
 * To see an example of a full local-in policy structure, look at the [corresponding local-in policy example](./resources/examples/local-in_example.md).
@@ -539,8 +555,6 @@ config system admin
     next
 end
 ```
-
-**Note:** Starting with 7.6.1, FortiGates already come with a default local-in policy that blocks the Malicious-Malicious.Server, Tor-Exit.Node, and Tor-Relay.Node ISDB objects.
 
 ### Configure and use threat feeds for firewall and local-in policies
 Threat feeds are regularly downloaded lists that include information like IPs, which can be used in firewall and local-in policies to block communication from and to malicious IPs.
@@ -1035,6 +1049,34 @@ config antivirus profile
             set av-scan block
             set outbreak-prevention block
             set quarantine enable
+        end
+    next
+end
+```
+
+### Antivirus profiles should treat Windows executables in email attachments as viruses
+Executables in emails are rarely desired and should be treated with much more caution.
+
+```
+config antivirus profile
+    edit "###PLACEHOLDER_AV-PROFILE###>"  
+        config imap
+            set av-scan block
+            set outbreak-prevention block
+            set quarantine enable
+            set executables virus
+        end
+        config pop3
+            set av-scan block
+            set outbreak-prevention block
+            set quarantine enable
+            set executables virus
+        end
+        config smtp
+            set av-scan block
+            set outbreak-prevention block
+            set quarantine enable
+            set executables virus
         end
     next
 end

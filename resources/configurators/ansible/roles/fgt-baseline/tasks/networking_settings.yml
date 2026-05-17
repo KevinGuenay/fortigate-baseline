@@ -1,0 +1,73 @@
+---
+- name: "Block to configure SD-WAN"
+  when: configure_sdwan
+  block:
+  - name: "Enable SD-WAN"
+    fortinet.fortios.fortios_system_sdwan:
+      vdom: "{{ vdom }}"
+      system_sdwan:
+        status: "enable"
+
+  - name: "Create SD-WAN zone"
+    fortinet.fortios.fortios_system_sdwan:
+      vdom: "{{ vdom }}"
+      system_sdwan:
+        zone:
+          -
+            name: "{{ sdwan_zone_name }}"
+
+  - name: "Create SD-WAN members"
+    fortinet.fortios.fortios_system_sdwan:
+      vdom: "{{ vdom }}"
+      member_state: "present"
+      member_path: members:seq_num
+      system_sdwan:
+        members:
+          -
+            seq_num: "{{ 500 + loop_index }}"
+            interface: "{{ item }}"
+            zone: "{{ sdwan_zone_name }}"
+    loop: "{{ sdwan_members }}"
+    loop_control:
+      index_var: loop_index
+
+- name: "Create RFC1918 address objects"
+  fortios_firewall_address:
+    vdom: "{{ vdom }}"
+    state: "present"
+    firewall_address:
+      name: "{{ item.name }}"
+      subnet: "{{ item.subnet }}"
+      allow_routing : "enable"
+      comment: "{{ comment_string }}"
+  loop:
+    - { name: "BASE-RFC1918-10", subnet: "10.0.0.0 255.0.0.0" }
+    - { name: "BASE-RFC1918-172", subnet: "172.16.0.0 255.240.0.0" }
+    - { name: "BASE-RFC1918-192", subnet: "192.168.0.0 255.255.0.0" }
+
+- name: "Create RFC1918 address group"
+  fortios_firewall_addrgrp:
+    vdom: "{{ vdom }}"
+    state: "present"
+    firewall_addrgrp:
+      name: "G_BASE-RFC1918"
+      comment: "{{ comment_string }}"
+      allow_routing : "enable"
+      member:
+        -
+          name: "BASE-RFC1918-10"
+        -
+          name: "BASE-RFC1918-172"
+        -
+          name: "BASE-RFC1918-192"
+
+- name: "Create RFC1918 blackhole route"
+  when: rfc1918_blackhole
+  fortios_router_static:
+    vdom: "{{ vdom }}"
+    state: "present"
+    router_static:
+      seq_num: "10000"
+      blackhole: "enable"
+      dstaddr: "G_BASE-RFC1918"
+      distance: "254"

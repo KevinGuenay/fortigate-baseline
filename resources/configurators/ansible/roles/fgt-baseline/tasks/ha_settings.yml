@@ -1,0 +1,71 @@
+---
+- name: "Configure non-default FortiGate FGCP/HA group ID"
+  fortios_system_ha:
+    vdom: "{{ vdom }}"
+    system_ha:
+      group_id: "{{ ha_group_id }}"
+  retries: 5
+  delay: 30
+
+- name: "Improve FortiGate FGCP/HA failover behaviour"
+  fortios_system_ha:
+    vdom: "{{ vdom }}"
+    system_ha:
+      session_pickup: "enable"
+      session_pickup_connectionless: "enable"
+      session_pickup_expectation: "enable"
+      memory_based_failover: "enable"
+      memory_failover_flip_timeout: "{{ memory_failover_flip_timeout }}"
+      memory_failover_threshold: "{{ memory_failover_threshold }}"
+      ha_uptime_diff_margin: "{{ ha_uptime_diff_margin }}"
+      ssd_failover: "enable"
+
+- name: "FortiGate FGCP/HA clusters should monitor interfaces"
+  fortios_system_ha:
+    vdom: "{{ vdom }}"
+    system_ha:
+      monitor: "{{ ha_monitor_interfaces }}"
+
+- name: "Create link monitor for HA remote link failover"
+  when: ha_remote_link_failover
+  fortios_system_link_monitor:
+    vdom: "{{ vdom }}"
+    state: "present"
+    system_link_monitor:
+      name: "{{ item.name }}"
+      status: "enable"
+      srcintf: "{{ item.srcintf }}"
+      protocol: "{{ item.protocol }}"
+      ha_priority: "{{ item.ha_priority }}"
+      update_cascade_interface: "{{ item.update_cascade_interface }}"
+      update_static_route: "{{ item.update_static_route }}"
+      update_policy_route: "{{ item.update_policy_route }}"
+      server:
+        -
+          address: "{{ item.server }}"
+  loop: "{{ ha_remote_link_failover_target }}"
+
+- name: "Set pingserver-monitor-interface setting as a fact with SD-WAN"
+  when: ha_remote_link_failover_sdwan_interface != "" and ha_remote_link_failover
+  set_fact:
+    pingserver_monitor_interface: "{{ pingserver_monitor_interface }} {{ ha_remote_link_failover_sdwan_interface }}"
+
+- name: "Set pingserver-monitor-interface setting as a fact with link monitors"
+  when: ha_remote_link_failover
+  set_fact:
+    pingserver_monitor_interface: "{{ pingserver_monitor_interface }} {{ item.srcintf }}"
+  loop: "{{ ha_remote_link_failover_target }}"
+
+- name: "Remote link failover for FortiGate FGCP/HA"
+  when: ha_remote_link_failover
+  fortios_system_ha:
+    vdom: "{{ vdom }}"
+    system_ha:
+      pingserver_monitor_interface: "{{ pingserver_monitor_interface }}"
+      pingserver_flip_timeout: "{{ memory_failover_flip_timeout }}"
+
+- name: "Configure VLAN monitoring of an FGCP/HA cluster"
+  fortios_system_ha_monitor:
+    vdom: "{{ vdom }}"
+    system_ha_monitor:
+      monitor_vlan: "enable"

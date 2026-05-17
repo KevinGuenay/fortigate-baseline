@@ -1,5 +1,10 @@
 # The FortiGate best practices baseline
 
+- [The FortiGate best practices baseline](#the-fortigate-best-practices-baseline)
+  - [Points to consider](#points-to-consider)
+  - [Repository structure](#repository-structure)
+  - [Configurators](#configurators)
+
 [**The baseline**](./baseline.md)
 
 Created and maintained by Kevin Guenay at <https://guenay.at>
@@ -31,4 +36,12 @@ This repository is structured as follows:
   * The activation of FortiGate Cloud Sandbox is also included in this, even though it requires input.  
   * **Note**: Security profiles will need to be further edited before being deployed.  
 * A [**fortigate\_baseline.conf**](./resources/configurations/fortigate_baseline.conf) file is available that includes **all** CLI commands and has placeholders (e.g. “\<\#\#\#PLACEHOLDER\_INTF\#\#\#\>”) for information you need to supply first.
+* Configurators, like Ansible, and their relevant files are found in [**configurators**](./resources/configurators).
 
+## Configurators
+
+To help with deploying the baseline, configurators are provided. Not all topics from the baseline can be configured because of limitations with the methods used or because of missing information.
+
+Currently, only Ansible is supported, but more configurators are planned.
+
+* [Ansible configurator](./resources/configurators/ansible/README.md)

@@ -1,0 +1,23 @@
+---
+- name: "Include global settings tasks file"
+  include_tasks: ../roles/fgt-baseline/tasks/global_settings.yml
+
+- name: "Include HA tasks file"
+  when: ha_enabled
+  include_tasks: ../roles/fgt-baseline/tasks/ha_settings.yml
+
+- name: "Include logging tasks file"
+  include_tasks: ../roles/fgt-baseline/tasks/logging_settings.yml
+
+- name: "Include device and network security tasks file"
+  include_tasks: ../roles/fgt-baseline/tasks/device_network_security_settings.yml
+
+- name: "Include networking tasks file"
+  include_tasks: ../roles/fgt-baseline/tasks/networking_settings.yml
+
+- name: "Include security profiles tasks file"
+  include_tasks: ../roles/fgt-baseline/tasks/security_profiles_settings.yml
+
+- name: "The following baseline settings cannot be applied via Ansible due to limitations or lack of environmental knowledge. Please apply these settings manually:"
+  debug:
+    msg: "{{ not_implemented_settings }}"

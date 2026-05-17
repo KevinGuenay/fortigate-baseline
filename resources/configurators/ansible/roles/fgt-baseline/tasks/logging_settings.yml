@@ -1,0 +1,57 @@
+---
+- name: "Log CLI commands"
+  fortios_system_global:
+    vdom: "{{ vdom }}"
+    system_global:
+      cli_audit_log: "enable"
+
+- name: "Monitor the bandwidth of relevant interfaces"
+  fortios_system_interface:
+    vdom: "{{ vdom }}"
+    state: "present"
+    system_interface:
+      name: "{{ item }}"
+      monitor_bandwidth: "enable"
+  loop: "{{ monitor_bandwidth_interfaces }}"
+
+- name: "Enable device detection on relevant interfaces"
+  fortios_system_interface:
+    vdom: "{{ vdom }}"
+    state: "present"
+    system_interface:
+      name: "{{ item }}"
+      device_identification: "enable"
+  loop: "{{ device_detection_interfaces }}"
+
+- name: "Log more and include more information in logs"
+  fortios_log_setting:
+    vdom: "{{ vdom }}"
+    log_setting:
+      fwpolicy_implicit_log: "enable"
+      local_in_policy_log: "enable"
+      extended_log: "enable"
+      extended_utm_log: "enable"
+      resolve_ip: "enable"
+      resolve_port: "enable"
+      rest_api_set: "enable"
+      rest_api_get: "enable"
+      zone_name: "enable"
+
+- name: "Enable memory logging"
+  fortios_log_memory_setting:
+    vdom: "{{ vdom }}"
+    log_memory_setting:
+      status: "enable"
+
+- name: "Enable local traffic logging to memory"
+  fortios_log_memory_filter:
+    vdom: "{{ vdom }}"
+    log_memory_filter:
+      local_traffic: "enable"
+
+- name: "Enable logging to disk and increase the maximum age"
+  fortios_log_disk_setting:
+    vdom: "{{ vdom }}"
+    log_disk_setting:
+      status: "enable"
+      maximum_log_age: 0

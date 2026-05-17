@@ -1,0 +1,8 @@
+---
+  - name: "Configure FortiGate baseline using fgt-baseline role"
+    hosts: fortigate
+    gather_facts: no
+    collections:
+    - fortinet.fortios
+    roles:
+    - ./roles/fgt-baseline

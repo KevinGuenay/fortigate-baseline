@@ -1,0 +1,819 @@
+---
+- name: "Disable telnet globally"
+  fortios_system_global:
+    vdom: "{{ vdom }}"
+    system_global:
+        admin_telnet: "disable"
+
+- name: "Block to configure local-in management security"
+  when: configure_local_in_management_security
+  block:
+  - name: "Create firewall addresses for allowed local-in management access"
+    fortios_firewall_address:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_address:
+        name: "{{ item.name }}"
+        subnet: "{{ item.subnet }}"
+        comment: "{{ comment_string }}"
+    loop: "{{ allowed_local_in_management_sources }}"
+
+  - name: "Create initial firewall address group for allowed local-in management access"
+    fortios_firewall_addrgrp:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_addrgrp:
+        name: "G_BASE-ALLOWED-LOCAL-IN-MANAGEMENT"
+        comment: "{{ comment_string }}"
+
+  - name: "Add all sources to address group for allowed local-in management access"
+    fortios_firewall_addrgrp:
+      vdom: "{{ vdom }}"
+      state: "present"
+      member_state: "present"
+      member_path: member:name
+      firewall_addrgrp:
+        name: "G_BASE-ALLOWED-LOCAL-IN-MANAGEMENT"
+        member:
+          -
+            name: "{{ item.name }}"
+    loop: "{{ allowed_local_in_management_sources }}"
+
+  - name: "Create admin HTTPS service"
+    fortios_firewall_service_custom:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_service_custom:
+        name: "TCP_{{ https_admin_port }}"
+        comment: "{{ comment_string }}"
+        protocol: "TCP/UDP/UDP-Lite/SCTP"
+        protocol_number: "6"
+        tcp_portrange: "{{ https_admin_port }}"
+
+  - name: "Create admin SSH service"
+    fortios_firewall_service_custom:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_service_custom:
+        name: "TCP_{{ ssh_admin_port }}"
+        comment: "{{ comment_string }}"
+        protocol: "TCP/UDP/UDP-Lite/SCTP"
+        protocol_number: "6"
+        tcp_portrange: "{{ ssh_admin_port }}"
+
+  - name: "Create local-in policy to allow management access from allowed networks"
+    when: local_in_policies_enabled
+    fortios_firewall_local_in_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_local_in_policy:
+        intf: "any"
+        intf_dict:
+          -
+            name: "any"
+        logtraffic: "enable"
+        srcaddr:
+          -
+            name: "G_BASE-ALLOWED-LOCAL-IN-MANAGEMENT"
+        service:
+          -
+            name: "TCP_{{ https_admin_port }}"
+          -
+            name: "TCP_{{ ssh_admin_port }}"
+          -
+            name: "SNMP"
+        dstaddr:
+          -
+            name: "all"
+        schedule: "always"
+        virtual_patch: "enable"
+        status: "enable"
+        action: "accept"
+        comments: "{{ comment_string }}"
+        policyid: 1000
+
+  - name: "Create disabled local-in policy to allow management access from allowed networks"
+    when: not local_in_policies_enabled
+    fortios_firewall_local_in_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_local_in_policy:
+        intf: "any"
+        intf_dict:
+          -
+            name: "any"
+        logtraffic: "enable"
+        srcaddr:
+          -
+            name: "G_BASE-ALLOWED-LOCAL-IN-MANAGEMENT"
+        service:
+          -
+            name: "TCP_{{ https_admin_port }}"
+          -
+            name: "TCP_{{ ssh_admin_port }}"
+          -
+            name: "SNMP"
+        dstaddr:
+          -
+            name: "all"
+        schedule: "always"
+        virtual_patch: "enable"
+        status: "disable"
+        action: "accept"
+        comments: "{{ comment_string }}"
+        policyid: 1000
+
+  - name: "Create local-in policy to block management access from all sources"
+    when: local_in_policies_enabled
+    fortios_firewall_local_in_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_local_in_policy:
+        intf: "any"
+        intf_dict:
+          -
+            name: "any"
+        logtraffic: "enable"
+        srcaddr:
+          -
+            name: "all"
+        service:
+          -
+            name: "TCP_{{ https_admin_port }}"
+          -
+            name: "TCP_{{ ssh_admin_port }}"
+          -
+            name: "SNMP"
+        dstaddr:
+          -
+            name: "all"
+        schedule: "always"
+        status: "enable"
+        action: "deny"
+        comments: "{{ comment_string }}"
+        policyid: 10001
+
+- name: "Create disabled local-in policy to block management access from all sources"
+  when: not local_in_policies_enabled
+  fortios_firewall_local_in_policy:
+    vdom: "{{ vdom }}"
+    state: "present"
+    firewall_local_in_policy:
+      intf: "any"
+      intf_dict:
+        -
+          name: "any"
+      logtraffic: "enable"
+      srcaddr:
+        -
+          name: "all"
+      service:
+        -
+          name: "TCP_{{ https_admin_port }}"
+        -
+          name: "TCP_{{ ssh_admin_port }}"
+        -
+          name: "SNMP"
+      dstaddr:
+        -
+          name: "all"
+      schedule: "always"
+      status: "disable"
+      action: "deny"
+      comments: "{{ comment_string }}"
+      policyid: 10001
+
+- name: "Configure trusted hosts for all administrators"
+  fortios_system_admin:
+    vdom: "{{ vdom }}"
+    state: "present"
+    system_admin:
+      name: "{{ item.name }}"
+      trusthost1: "{{ item.trusthost1 }}"
+      trusthost2: "{{ item.trusthost2 }}"
+      trusthost3: "{{ item.trusthost3 }}"
+      trusthost4: "{{ item.trusthost4 }}"
+      trusthost5: "{{ item.trusthost5 }}"
+      trusthost6: "{{ item.trusthost6 }}"
+      trusthost7: "{{ item.trusthost7 }}"
+      trusthost8: "{{ item.trusthost8 }}"
+      trusthost9: "{{ item.trusthost9 }}"
+      trusthost10: "{{ item.trusthost10 }}"
+  loop: "{{ fortigate_admins }}"
+
+- name: "Block to configure threat feed security"
+  when: configure_threatfeed_security
+  block:
+  - name: "Configure threatfeed external resources"
+    fortios_system_external_resource:
+      vdom: "{{ vdom }}"
+      state: "present"
+      system_external_resource:
+        name: "TF_{{ item.name}}"
+        comments: "{{ comment_string }}"
+        type: "address"
+        status: "enable"
+        resource: "{{ item.url }}"
+        refresh_rate: 30
+    loop: "{{ threatfeeds }}"
+
+  - name: "Create initial firewall policy to block threat feed access from all sources"
+    when: firewall_policies_enabled
+    fortios_firewall_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_policy:
+        srcintf:
+          -
+            name: "any"
+        dstintf:
+          -
+            name: "any"
+        srcaddr:
+          -
+            name: "all"
+        dstaddr:
+          -
+            name: "TF_{{ threatfeeds[0]['name'] }}"
+        service:
+          -
+            name: "ALL"
+        schedule: "always"
+        status: "enable"
+        action: "deny"
+        name: "BLOCK THREAT FEEDS TO ANY"
+        comments: "{{ comment_string }}"
+        policyid: 10002
+
+  - name: "Set correct members on firewall policy to block threat feed access from all sources"
+    when: firewall_policies_enabled
+    fortios_firewall_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      member_state: "present"
+      member_path: dstaddr:name
+      firewall_policy:
+        srcintf:
+          -
+            name: "any"
+        dstintf:
+          -
+            name: "any"
+        srcaddr:
+          -
+            name: "all"
+        dstaddr:
+          -
+            name: "TF_{{ item.name }}"
+        service:
+          -
+            name: "ALL"
+        schedule: "always"
+        status: "enable"
+        action: "deny"
+        name: "BLOCK THREAT FEEDS TO ANY"
+        comments: "{{ comment_string }}"
+        policyid: 10002
+    loop: "{{ threatfeeds }}"
+
+  - name: "Create initial disabled firewall policy to block threat feed access from all sources"
+    when: not firewall_policies_enabled
+    fortios_firewall_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_policy:
+        srcintf:
+          -
+            name: "any"
+        dstintf:
+          -
+            name: "any"
+        srcaddr:
+          -
+            name: "all"
+        dstaddr:
+          -
+            name: "TF_{{ threatfeeds[0]['name'] }}"
+        service:
+          -
+            name: "ALL"
+        schedule: "always"
+        status: "disable"
+        action: "deny"
+        name: "BLOCK THREAT FEEDS TO ANY"
+        comments: "{{ comment_string }}"
+        policyid: 10002
+
+  - name: "Set correct members on disabled firewall policy to block threat feed access from all sources"
+    when: not firewall_policies_enabled
+    fortios_firewall_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      member_state: "present"
+      member_path: dstaddr:name
+      firewall_policy:
+        srcintf:
+          -
+            name: "any"
+        dstintf:
+          -
+            name: "any"
+        srcaddr:
+          -
+            name: "all"
+        dstaddr:
+          -
+            name: "TF_{{ item.name }}"
+        service:
+          -
+            name: "ALL"
+        schedule: "always"
+        status: "disable"
+        action: "deny"
+        name: "BLOCK THREAT FEEDS TO ANY"
+        comments: "{{ comment_string }}"
+        policyid: 10002
+    loop: "{{ threatfeeds }}"
+
+  - name: "Create initial firewall policy to block threat feed access to all destinations"
+    when: firewall_policies_enabled
+    fortios_firewall_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_policy:
+        srcintf:
+          -
+            name: "any"
+        dstintf:
+          -
+            name: "any"
+        srcaddr:
+          -
+            name: "TF_{{ threatfeeds[0]['name'] }}"
+        dstaddr:
+          -
+            name: "all"
+        service:
+          -
+            name: "ALL"
+        schedule: "always"
+        status: "enable"
+        action: "deny"
+        name: "BLOCK TRAFFIC TO BAD THREAT FEEDS"
+        comments: "{{ comment_string }}"
+        policyid: 10003
+
+  - name: "Set correct members on firewall policy to block threat feed access to all destinations"
+    when: firewall_policies_enabled
+    fortios_firewall_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      member_state: "present"
+      member_path: srcaddr:name
+      firewall_policy:
+        srcintf:
+          -
+            name: "any"
+        dstintf:
+          -
+            name: "any"
+        srcaddr:
+          -
+            name: "TF_{{ item.name }}"
+        dstaddr:
+          -
+            name: "all"
+        service:
+          -
+            name: "ALL"
+        schedule: "always"
+        status: "enable"
+        action: "deny"
+        name: "BLOCK TRAFFIC TO BAD THREAT FEEDS"
+        comments: "{{ comment_string }}"
+        policyid: 10003
+    loop: "{{ threatfeeds }}"
+
+  - name: "Create initial disabled firewall policy to block threat feed access to all destinations"
+    when: not firewall_policies_enabled
+    fortios_firewall_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_policy:
+        srcintf:
+          -
+            name: "any"
+        dstintf:
+          -
+            name: "any"
+        srcaddr:
+          -
+            name: "TF_{{ threatfeeds[0]['name'] }}"
+        dstaddr:
+          -
+            name: "all"
+        service:
+          -
+            name: "ALL"
+        schedule: "always"
+        status: "disable"
+        action: "deny"
+        name: "BLOCK TRAFFIC TO BAD THREAT FEEDS"
+        comments: "{{ comment_string }}"
+        policyid: 10003
+
+  - name: "Set correct members on disabled firewall policy to block threat feed access to all destinations"
+    when: not firewall_policies_enabled
+    fortios_firewall_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      member_state: "present"
+      member_path: srcaddr:name
+      firewall_policy:
+        srcintf:
+          -
+            name: "any"
+        dstintf:
+          -
+            name: "any"
+        srcaddr:
+          -
+            name: "TF_{{ item.name }}"
+        dstaddr:
+          -
+            name: "all"
+        service:
+          -
+            name: "ALL"
+        schedule: "always"
+        status: "disable"
+        action: "deny"
+        name: "BLOCK TRAFFIC TO BAD THREAT FEEDS"
+        comments: "{{ comment_string }}"
+        policyid: 10003
+    loop: "{{ threatfeeds }}"
+
+  - name: "Create initial local-in policy to block access from threat feeds to FortiGate"
+    when: local_in_policies_enabled
+    fortios_firewall_local_in_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_local_in_policy:
+        intf: "any"
+        intf_dict:
+          -
+            name: "any"
+        logtraffic: "enable"
+        srcaddr:
+          -
+            name: "TF_{{ threatfeeds[0]['name'] }}"
+        service:
+          -
+            name: "ALL"
+        dstaddr:
+          -
+            name: "all"
+        schedule: "always"
+        status: "enable"
+        action: "deny"
+        comments: "BLOCK BAD THREAT FEEDS TO FORTIGATE. {{ comment_string }}"
+        policyid: 10002
+
+  - name: "Set correct members on local-in policy to block access from threat feeds to FortiGate"
+    when: local_in_policies_enabled
+    fortios_firewall_local_in_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      member_state: "present"
+      member_path: srcaddr:name
+      firewall_local_in_policy:
+        intf: "any"
+        intf_dict:
+          -
+            name: "any"
+        logtraffic: "enable"
+        srcaddr:
+          -
+            name: "TF_{{ item.name }}"
+        service:
+          -
+            name: "ALL"
+        dstaddr:
+          -
+            name: "all"
+        schedule: "always"
+        status: "enable"
+        action: "deny"
+        policyid: 10002
+        comments: "BLOCK BAD THREAT FEEDS TO FORTIGATE. {{ comment_string }}"
+    loop: "{{ threatfeeds }}"
+
+  - name: "Create initial local-in policy to block access from threat feeds to FortiGate"
+    when: not local_in_policies_enabled
+    fortios_firewall_local_in_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_local_in_policy:
+        intf: "any"
+        intf_dict:
+          -
+            name: "any"
+        logtraffic: "enable"
+        srcaddr:
+          -
+            name: "TF_{{ threatfeeds[0]['name'] }}"
+        service:
+          -
+            name: "ALL"
+        dstaddr:
+          -
+            name: "all"
+        schedule: "always"
+        status: "disable"
+        action: "deny"
+        comments: "BLOCK BAD THREAT FEEDS TO FORTIGATE. {{ comment_string }}"
+        policyid: 10002
+
+  - name: "Set correct members on disabled local-in policy to block access from threat feeds to FortiGate"
+    when: not local_in_policies_enabled
+    fortios_firewall_local_in_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      member_state: "present"
+      member_path: srcaddr:name
+      firewall_local_in_policy:
+        intf: "any"
+        intf_dict:
+          -
+            name: "any"
+        logtraffic: "enable"
+        srcaddr:
+          -
+            name: "TF_{{ item.name }}"
+        service:
+          -
+            name: "ALL"
+        dstaddr:
+          -
+            name: "all"
+        schedule: "always"
+        status: "disable"
+        action: "deny"
+        policyid: 10002
+        comments: "BLOCK BAD THREAT FEEDS TO FORTIGATE. {{ comment_string }}"
+    loop: "{{ threatfeeds }}"
+
+- name: "Block to configure ISDB security"
+  when: configure_isdb_security
+  block:
+  - name: "Create initial ISDB service group for source objects"
+    fortios_firewall_internet_service_group:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_internet_service_group:
+        name: "BAD-ISDB-SOURCE"
+        comment: "{{ comment_string }}"
+        direction: "source"
+        member:
+          -
+            name: "{{ bad_isdb_sources[0]}}"
+
+  - name: "Set correct ISDB service group members for source objects"
+    fortios_firewall_internet_service_group:
+      vdom: "{{ vdom }}"
+      state: "present"
+      member_state: "present"
+      member_path: member:name
+      firewall_internet_service_group:
+        name: "BAD-ISDB-SOURCE"
+        comment: "{{ comment_string }}"
+        direction: "source"
+        member:
+          -
+            name: "{{ item }}"
+    loop: "{{ bad_isdb_sources }}"
+    ignore_errors: true #Errors are ignored, because some ISDB entries can have different names depending on the installed ISDB version
+
+  - name: "Create initial ISDB service group for destination objects"
+    fortios_firewall_internet_service_group:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_internet_service_group:
+        name: "BAD-ISDB-DESTINATION"
+        comment: "{{ comment_string }}"
+        direction: "destination"
+        member:
+          -
+            name: "{{ bad_isdb_destinations[0] }}"
+
+  - name: "Set correct ISDB service group members for destination objects"
+    fortios_firewall_internet_service_group:
+      vdom: "{{ vdom }}"
+      state: "present"
+      member_state: "present"
+      member_path: member:name
+      firewall_internet_service_group:
+        name: "BAD-ISDB-DESTINATION"
+        comment: "{{ comment_string }}"
+        direction: "destination"
+        member:
+          -
+            name: "{{ item }}"
+    loop: "{{ bad_isdb_destinations }}"
+    ignore_errors: true #Errors are ignored, because some ISDB entries can have different names depending on the installed ISDB version
+
+  - name: "Create firewall policy to block bad ISDB access from all sources"
+    when: firewall_policies_enabled
+    fortios_firewall_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_policy:
+        srcintf:
+          -
+            name: "any"
+        dstintf:
+          -
+            name: "any"
+        srcaddr:
+          -
+            name: "all"
+        internet_service_group:
+          -
+            name: "BAD-ISDB-DESTINATION"
+        service:
+          -
+            name: "ALL"
+        schedule: "always"
+        internet_service: "enable"
+        status: "enable"
+        action: "deny"
+        name: "BLOCK TRAFFIC TO BAD ISDB"
+        comments: "{{ comment_string }}"
+        policyid: 10004
+
+  - name: "Create disabled firewall policy to block bad ISDB access from all sources"
+    when: not firewall_policies_enabled
+    fortios_firewall_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_policy:
+        srcintf:
+          -
+            name: "any"
+        dstintf:
+          -
+            name: "any"
+        srcaddr:
+          -
+            name: "all"
+        internet_service_group:
+          -
+            name: "BAD-ISDB-DESTINATION"
+        service:
+          -
+            name: "ALL"
+        schedule: "always"
+        internet_service: "enable"
+        status: "disable"
+        action: "deny"
+        name: "BLOCK TRAFFIC TO BAD ISDB"
+        comments: "{{ comment_string }}"
+        policyid: 10004
+
+  - name: "Create firewall policy to block all sources bad ISDB access"
+    when: firewall_policies_enabled
+    fortios_firewall_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_policy:
+        srcintf:
+          -
+            name: "any"
+        dstintf:
+          -
+            name: "any"
+        dstaddr:
+          -
+            name: "all"
+        internet_service_src_group:
+          -
+            name: "BAD-ISDB-SOURCE"
+        service:
+          -
+            name: "ALL"
+        schedule: "always"
+        internet_service_src: "enable"
+        status: "enable"
+        action: "deny"
+        name: "BLOCK BAD ISDB TO ANY"
+        comments: "{{ comment_string }}"
+        policyid: 10005
+
+  - name: "Create disabled firewall policy to block all sources bad ISDB access"
+    when: not firewall_policies_enabled
+    fortios_firewall_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_policy:
+        srcintf:
+          -
+            name: "any"
+        dstintf:
+          -
+            name: "any"
+        dstaddr:
+          -
+            name: "all"
+        internet_service_src_group:
+          -
+            name: "BAD-ISDB-SOURCE"
+        service:
+          -
+            name: "ALL"
+        schedule: "always"
+        internet_service_src: "enable"
+        status: "disable"
+        action: "deny"
+        name: "BLOCK BAD ISDB TO ANY"
+        comments: "{{ comment_string }}"
+        policyid: 10005
+
+  - name: "Create local-in policy to block access from bad ISDB to FortiGate"
+    when: local_in_policies_enabled
+    fortios_firewall_local_in_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_local_in_policy:
+        intf: "any"
+        intf_dict:
+          -
+            name: "any"
+        internet_service_src_group:
+          -
+            name: "BAD-ISDB-SOURCE"
+        logtraffic: "enable"
+        service:
+          -
+            name: "ALL"
+        dstaddr:
+          -
+            name: "all"
+        schedule: "always"
+        internet_service_src: "enable"
+        status: "enable"
+        action: "deny"
+        comments: "BLOCK ISDB SOURCES TO FORTIGATE. {{ comment_string }}"
+        policyid: 10005
+
+  - name: "Create disabled local-in policy to block access from bad ISDB to FortiGate"
+    when: not local_in_policies_enabled
+    fortios_firewall_local_in_policy:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_local_in_policy:
+        intf: "any"
+        intf_dict:
+          -
+            name: "any"
+        internet_service_src_group:
+          -
+            name: "BAD-ISDB-SOURCE"
+        logtraffic: "enable"
+        service:
+          -
+            name: "ALL"
+        dstaddr:
+          -
+            name: "all"
+        schedule: "always"
+        internet_service_src: "enable"
+        status: "disable"
+        action: "deny"
+        comments: "BLOCK ISDB SOURCES TO FORTIGATE. {{ comment_string }}"
+        policyid: 10005
+
+- name: "Disable FortiCloud SSO"
+  fortios_system_global:
+    vdom: "{{ vdom }}"
+    system_global:
+      admin_forticloud_sso_login: "disable"
+
+- name: "Stronger encryption for FortiGate and stronger Diffie-Hellman"
+  fortios_system_global:
+    vdom: "{{ vdom }}"
+    system_global:
+      dh_params: "8192"
+      strong_crypto: "enable"
+
+- name: "Disable static TLS keys for FortiGate-terminated traffic"
+  fortios_system_global:
+    vdom: "{{ vdom }}"
+    system_global:
+      ssl_static_key_ciphers : "disable"
+
+- name: "USB auto-install of configurations and firmware should be disabled"
+  fortios_system_auto_install:
+    vdom: "{{ vdom }}"
+    system_auto_install:
+      auto_install_config: "disable"
+      auto_install_image: "disable"

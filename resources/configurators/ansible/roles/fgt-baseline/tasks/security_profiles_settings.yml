@@ -1,0 +1,311 @@
+---
+- name: "Block to create baseline security profiles"
+  when: create_baseline_security_profiles
+  block:
+  - name: "Create baseline SSL-SSH profile"
+    fortios_firewall_ssl_ssh_profile:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_ssl_ssh_profile:
+        name: "BASE-SSL-SSH-PROFILE"
+        comment: "{{ comment_string }}"
+        ssl:
+          unsupported_ssl_cipher: "block"
+          unsupported_ssl_negotiation: "block"
+        https:
+          unsupported_ssl_cipher: "block"
+          unsupported_ssl_negotiation: "block"
+          ports: "443"
+          quic: "bypass"
+          status: "certificate-inspection"
+        ftps:
+          ports: "990"
+          unsupported_ssl_cipher: "block"
+          unsupported_ssl_negotiation: "block"
+          min_allowed_ssl_version : "tls-1.2"
+        imaps:
+          ports: "993"
+          unsupported_ssl_cipher: "block"
+          unsupported_ssl_negotiation: "block"
+        pop3s:
+          ports: "995"
+          unsupported_ssl_cipher: "block"
+          unsupported_ssl_negotiation: "block"
+        smtps:
+          ports: "465"
+          unsupported_ssl_cipher: "block"
+          unsupported_ssl_negotiation: "block"
+        ssh:
+          ports: "22"
+          unsupported_version: "block"
+        dot:
+          unsupported_ssl_cipher: "block"
+          unsupported_ssl_negotiation: "block"
+
+  - name: "Create baseline deep inspection SSL-SSH profile"
+    fortios_firewall_ssl_ssh_profile:
+      vdom: "{{ vdom }}"
+      state: "present"
+      firewall_ssl_ssh_profile:
+        name: "BASE-DPI-SSL-SSH-PROFILE"
+        comment: "{{ comment_string }}"
+        ssl:
+          unsupported_ssl_cipher: "block"
+          unsupported_ssl_negotiation: "block"
+        https:
+          unsupported_ssl_cipher: "block"
+          unsupported_ssl_negotiation: "block"
+          ports: "443"
+          quic: "inspect"
+          status: "deep-inspection"
+          min_allowed_ssl_version : "tls-1.2"
+        ftps:
+          ports: "990"
+          unsupported_ssl_cipher: "block"
+          unsupported_ssl_negotiation: "block"
+          min_allowed_ssl_version : "tls-1.2"
+          status: "deep-inspection"
+        imaps:
+          ports: "993"
+          unsupported_ssl_cipher: "block"
+          unsupported_ssl_negotiation: "block"
+          status: "deep-inspection"
+        pop3s:
+          ports: "995"
+          unsupported_ssl_cipher: "block"
+          unsupported_ssl_negotiation: "block"
+          status: "deep-inspection"
+        smtps:
+          ports: "465"
+          unsupported_ssl_cipher: "block"
+          unsupported_ssl_negotiation: "block"
+          status: "deep-inspection"
+        ssh:
+          ports: "22"
+          unsupported_version: "block"
+        dot:
+          unsupported_ssl_cipher: "block"
+          unsupported_ssl_negotiation: "block"
+          quic: "inspect"
+          status: "deep-inspection"
+
+  - name: "Create baseline antivirus profile"
+    fortios_antivirus_profile:
+      vdom: "{{ vdom }}"
+      state: "present"
+      antivirus_profile:
+        name: "BASE-AV-PROFILE"
+        comment: "{{ comment_string }}"
+        extended_log: "enable"
+        http:
+          av_scan: "block"
+          outbreak_prevention: "block"
+          quarantine: "enable"
+        ftp:
+          av_scan: "block"
+          outbreak_prevention: "block"
+          quarantine: "enable"
+        imap:
+          av_scan: "block"
+          outbreak_prevention: "block"
+          quarantine: "enable"
+          executables: "virus"
+        pop3:
+          av_scan: "block"
+          outbreak_prevention: "block"
+          quarantine: "enable"
+          executables: "virus"
+        smtp:
+          av_scan: "block"
+          outbreak_prevention: "block"
+          quarantine: "enable"
+          executables: "virus"
+        nntp:
+          av_scan: "block"
+          outbreak_prevention: "block"
+          quarantine: "enable"
+        cifs:
+          av_scan: "block"
+          outbreak_prevention: "block"
+          quarantine: "enable"
+
+  - name: "Create baseline IPS client profile"
+    fortios_ips_sensor:
+      vdom: "{{ vdom }}"
+      state: "present"
+      ips_sensor:
+        name: "BASE-IPS-CLIENT-PROFILE"
+        comment: "{{ comment_string }}"
+        block_malicious_url: "enable"
+        scan_botnet_connections: "block"
+        extended_log: "enable"
+        entries:
+          -
+            id: "1"
+            location: "client"
+            log: "enable"
+            log_attack_context: "enable"
+            log_packet: "enable"
+            action: "block"
+            severity: "medium high critical"
+          -
+            id: "2"
+            location: "client"
+            log: "enable"
+            log_attack_context: "enable"
+            log_packet: "enable"
+            severity: "low"
+
+  - name: "Create baseline IPS server profile"
+    fortios_ips_sensor:
+      vdom: "{{ vdom }}"
+      state: "present"
+      ips_sensor:
+        name: "BASE-IPS-SERVER-PROFILE"
+        comment: "{{ comment_string }}"
+        block_malicious_url: "enable"
+        scan_botnet_connections: "block"
+        extended_log: "enable"
+        entries:
+          -
+            id: "1"
+            location: "server"
+            log: "enable"
+            log_attack_context: "enable"
+            log_packet: "enable"
+            action: "block"
+            severity: "medium high critical"
+          -
+            id: "2"
+            location: "server"
+            log: "enable"
+            log_attack_context: "enable"
+            log_packet: "enable"
+            severity: "low"
+
+  - name: "Create baseline IPS client server profile"
+    fortios_ips_sensor:
+      vdom: "{{ vdom }}"
+      state: "present"
+      ips_sensor:
+        name: "BASE-IPS-CLIENT-SERVER-PROFILE"
+        comment: "{{ comment_string }}"
+        block_malicious_url: "enable"
+        scan_botnet_connections: "block"
+        extended_log: "enable"
+        entries:
+          -
+            id: "1"
+            location: "client server"
+            log: "enable"
+            log_attack_context: "enable"
+            log_packet: "enable"
+            action: "block"
+            severity: "medium high critical"
+          -
+            id: "2"
+            location: "client server"
+            log: "enable"
+            log_attack_context: "enable"
+            log_packet: "enable"
+            severity: "low"
+
+  - name: "Create baseline DNS filter profile"
+    fortios_dnsfilter_profile:
+      vdom: "{{ vdom }}"
+      state: "present"
+      dnsfilter_profile:
+        name: "BASE-DNS-FILTER-PROFILE"
+        comment: "{{ comment_string }}"
+        block_botnet: "enable"
+        log_all_domain: "enable"
+
+  - name: "Create baseline application control profile"
+    fortios_application_list:
+      vdom: "{{ vdom }}"
+      state: "present"
+      application_list:
+        name: "BASE-APPLICATION-LIST"
+        comment: "{{ comment_string }}"
+        extended_log : "enable"
+        control_default_network_services: "enable"
+        enforce_default_app_port: "enable"
+        other_application_action: "pass"
+        other_application_log: "enable"
+        unknown_application_action: "pass"
+        unknown_application_log: "enable"
+        default_network_services:
+          -
+            id: "1"
+            port: "25"
+            services: "smtp"
+            violation_action: "block"
+          -
+            id: "2"
+            port: "22"
+            services: "ssh"
+            violation_action: "block"
+          -
+            id: "3"
+            port: "53"
+            services: "dns"
+            violation_action: "block"
+          -
+            id: "4"
+            port: "21"
+            services: "ftp"
+            violation_action: "block"
+          -
+            id: "5"
+            port: "161"
+            services: "snmp"
+            violation_action: "block"
+          -
+            id: "6"
+            port: "143"
+            services: "imap"
+            violation_action: "block"
+          -
+            id: "7"
+            port: "110"
+            services: "pop3"
+            violation_action: "block"
+
+  - name: "Create baseline web filter profile"
+    fortios_webfilter_profile:
+      vdom: "{{ vdom }}"
+      state: "present"
+      webfilter_profile:
+        name: "BASE-WEBFILTER-PROFILE"
+        comment: "{{ comment_string }}"
+        extended_log: "enable"
+        options: "block-invalid-url"
+        log_all_url: "enable"
+        ftgd_wf:
+          options: "rate-server-ip"
+
+- name: "Set antivirus quarantine destination to FortiAnalyzer"
+  when: av_quarantine_destination == "fortianalyzer"
+  fortios_antivirus_quarantine:
+    vdom: "{{ vdom }}"
+    antivirus_quarantine:
+      destination: "FortiAnalyzer"
+
+- name: "Set antivirus quarantine destination to disk"
+  when: av_quarantine_destination == "disk"
+  fortios_antivirus_quarantine:
+    vdom: "{{ vdom }}"
+    antivirus_quarantine:
+      destination: "disk"
+
+- name: "Antivirus should use the extreme database if available"
+  fortios_antivirus_settings:
+    vdom: "{{ vdom }}"
+    antivirus_settings:
+      use_extreme_db: "enable"
+
+- name: "Antivirus should use machine learning to better detect malware"
+  fortios_antivirus_settings:
+    vdom: "{{ vdom }}"
+    antivirus_settings:
+      machine_learning_detection: "enable"
