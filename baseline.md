@@ -250,9 +250,11 @@ FortiGate HA clusters use a default group ID of 0 and [since the group ID is use
 
 **Attention:** Changing the group ID from the default of 0 changes the virtual MAC addresses of interfaces, which creates a short outage due to the propagation of the new MAC addresses. The length of the outage depends on how network devices respond to the FortiGate HA cluster's Gratuitous ARP (GARP). From experience, this outage is anywhere from 10 to 60 seconds. Consult the documentation for the devices in your network.
 
+```
 config system ha
     set group-id "<###PLACEHOLDER_HA-GROUP-ID###>"
 end
+```
 
 ### Improve FortiGate FGCP/HA failover behaviour
 By default, FortiGate HA clusters:
