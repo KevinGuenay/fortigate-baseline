@@ -26,6 +26,8 @@ The configurator was tested using the API method with an access token. Consult t
 
 An [example inventory](example_inventory.ini) as well as an [example playbook](configure_baseline.yml) are provided.
 
+The example playbook will prompt you for an access token. If you have supplied it in the inventory, leave the prompt in the playbook empty. You can remove the `ansible_httpapi_session_key` variable from the inventory if you are only using the prompt to supply the access token.
+
 ## Points to consider
 
 * I am not liable for any issues you experience when using the configurator.

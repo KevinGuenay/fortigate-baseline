@@ -1,4 +1,9 @@
 ---
+- name: "Set access token variable if supplied via prompt"
+  when: access_token is defined and access_token != ""
+  set_fact:
+    ansible_httpapi_session_key: '{"access_token":"{{ access_token }}"}'
+
 - name: "Include global settings tasks file"
   include_tasks: ../roles/fgt-baseline/tasks/global_settings.yml
 

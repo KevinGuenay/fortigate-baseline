@@ -20,19 +20,23 @@
           status: "certificate-inspection"
         ftps:
           ports: "990"
+          status: "disable"
           unsupported_ssl_cipher: "block"
           unsupported_ssl_negotiation: "block"
           min_allowed_ssl_version : "tls-1.2"
         imaps:
           ports: "993"
+          status: "disable"
           unsupported_ssl_cipher: "block"
           unsupported_ssl_negotiation: "block"
         pop3s:
           ports: "995"
+          status: "disable"
           unsupported_ssl_cipher: "block"
           unsupported_ssl_negotiation: "block"
         smtps:
           ports: "465"
+          status: "disable"
           unsupported_ssl_cipher: "block"
           unsupported_ssl_negotiation: "block"
         ssh:

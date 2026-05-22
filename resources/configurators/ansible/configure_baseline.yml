@@ -1,6 +1,10 @@
 ---
   - name: "Configure FortiGate baseline using fgt-baseline role"
     hosts: fortigate
+    vars_prompt:
+      - name: "access_token"
+        prompt: "Enter the access token for the FortiGate API user (leave empty if supplied in inventory)"
+        private: true
     gather_facts: no
     collections:
     - fortinet.fortios
